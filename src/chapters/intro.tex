@@ -1,0 +1,441 @@
+\chapter{Introduction}
+\label{chapter:intro}
+
+\textbf{This is just a demo file. It should not be used as a sample for a thesis.}\\
+\todo{Remove this line (this is a TODO)}
+
+
+\section{Project Description}
+\label{sec:proj}
+
+\subsection{Project Scope}
+\label{sub-sec:proj-scope}
+
+This thesis presents the \textbf{\project}.
+
+This is an example of a footnote \footnote{\url{www.google.com}}. You can see here a reference to \labelindexref{Section}{sub-sec:proj-objectives}.
+
+Here we have defined the CS abbreviation.\abbrev{CS}{Computer Science} and the UPB abbreviation.\abbrev{UPB}{University Politehnica of Bucharest}
+
+The main scope of this project is to qualify xLuna for use in critical systems.
+
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean aliquam lectus vel orci malesuada accumsan. Sed lacinia egestas tortor, eget tristiqu dolor congue sit amet. Curabitur ut nisl a nisi consequat mollis sit amet quis nisl. Vestibulum hendrerit velit at odio sodales pretium. Nam quis tortor sed ante varius sodales. Etiam lacus arcu, placerat sed laoreet a, facilisis sed nunc. Nam gravida fringilla ligula, eu congue lorem feugiat eu.
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean aliquam lectus vel orci malesuada accumsan. Sed lacinia egestas tortor, eget tristiqu dolor congue sit amet. Curabitur ut nisl a nisi consequat mollis sit amet quis nisl. Vestibulum hendrerit velit at odio sodales pretium. Nam quis tortor sed ante varius sodales. Etiam lacus arcu, placerat sed laoreet a, facilisis sed nunc. Nam gravida fringilla ligula, eu congue lorem feugiat eu.
+
+
+\subsection{Project Objectives}
+\label{sub-sec:proj-objectives}
+
+We have now included \labelindexref{Figure}{img:report-framework}.
+
+\fig[scale=0.5]{src/img/reporting-framework.pdf}{img:report-framework}{Reporting Framework}
+
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean aliquam lectus vel orci malesuada accumsan. Sed lacinia egestas tortor, eget tristiqu dolor congue sit amet. Curabitur ut nisl a nisi consequat mollis sit amet quis nisl. Vestibulum hendrerit velit at odio sodales pretium. Nam quis tortor sed ante varius sodales. Etiam lacus arcu, placerat sed laoreet a, facilisis sed nunc. Nam gravida fringilla ligula, eu congue lorem feugiat eu.
+
+We can also have citations like \cite{cite-wifichip}.
+
+\subsection{Related Work}
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean aliquam lectus vel orci malesuada accumsan. Sed lacinia egestas tortor, eget tristiqu dolor congue sit amet. Curabitur ut nisl a nisi consequat mollis sit amet quis nisl. Vestibulum hendrerit velit at odio sodales pretium. Nam quis tortor sed ante varius sodales. Etiam lacus arcu, placerat sed laoreet a, facilisis sed nunc. Nam gravida fringilla ligula, eu congue lorem feugiat eu.
+
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean aliquam lectus vel orci malesuada accumsan. Sed lacinia egestas tortor, eget tristiqu dolor congue sit amet. Curabitur ut nisl a nisi consequat mollis sit amet quis nisl. Vestibulum hendrerit velit at odio sodales pretium. Nam quis tortor sed ante varius sodales. Etiam lacus arcu, placerat sed laoreet a, facilisis sed nunc. Nam gravida fringilla ligula, eu congue lorem feugiat eu.
+
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean aliquam lectus vel orci malesuada accumsan. Sed lacinia egestas tortor, eget tristiqu dolor congue sit amet. Curabitur ut nisl a nisi consequat mollis sit amet quis nisl. Vestibulum hendrerit velit at odio sodales pretium. Nam quis tortor sed ante varius sodales. Etiam lacus arcu, placerat sed laoreet a, facilisis sed nunc. Nam gravida fringilla ligula, eu congue lorem feugiat eu.
+
+We are now discussing the \textbf{Ultimate answer to all knowledge}.
+This line is particularly important it also adds an index entry for \textit{Ultimate answer to all knowledge}.\index{Ultimate answer to all knowledge}
+
+\subsection{Demo listings}
+
+We can also include listings like the following:
+
+% Inline Listing example
+\lstset{language=make,caption=Application Makefile,label=lst:app-make}
+\begin{lstlisting}
+CSRCS = app.c
+SRC_DIR =..
+include $(SRC_DIR)/config/application.cfg
+\end{lstlisting}
+
+Listings can also be referenced. References don't have to include chapter/table/figure numbers... so we can have hyperlinks \labelref{like this}{lst:makefile-test}.
+
+\subsection{Tables}
+
+We can also have tables... like \labelindexref{Table}{table:reports}.
+
+\begin{center}
+\begin{table}[htb]
+  \caption{Generated reports - associated Makefile targets and scripts}
+  \begin{tabular}{l*{6}{c}r}
+    Generated report & Makefile target & Script \\
+    \hline
+    Full Test Specification & full_spec & generate_all_spec.py  \\
+    Test Report & test_report & generate_report.py  \\
+    Requirements Coverage & requirements_coverage &
+    generate_requirements_coverage.py   \\
+    API Coverage & api_coverage & generate_api_coverage.py  \\
+  \end{tabular}
+  \label{table:reports}
+\end{table}
+\end{center}
+
+\chapter{Nexus 5 Analysis}
+
+One of the first Android phones used for studying the Multiple Wireless Connectivity was the Google Nexus 5 \cite{cite-nexus5}. The main reason for this choice is the availability of both 2.4 Ghz and 5Ghz Wi-Fi frequencies which opens the door for the analysis of channel switching use-cases. 
+
+The analysis is focused on the parallel usage of both the regular Wi-Fi 802.11 connectivity and Wi-Fi Direct connectivity. The main discovery is that the Power Save algorithm is automatically disabled once a second virtual interface is created, in this particular case the interface for the Wi-Fi Direct connection. 
+
+What I tried to do was to replace this second interface with an interface for a secondary Wi-Fi 802.11 connection then implement my own Power-Save algorithm but this proved to be a show-stopper because the firmware for Nexus 5 is closed-source and it was impossible to make the stack work in parallel with two virtual interfaces in managed mode.
+
+
+\section{Testbed}
+\label{sec:testbed}
+
+Some modifications had to be done to the Wi-Fi Direct functionality so CyanogenMod 13 Hammerhead was chosen as operating system as the community was very active when the work for this project was started (2014). In the meantime, the original project died and was rebranded in Lineage OS \cite{cite-lineage}.
+
+As hardware I used an AC750 Wireless Dual Band Gigabit Router \cite{cite-router}, a Monsoon Power Monitor device \cite{cite-monsoon}, a WiFi Spectrum analyzer and two Nexus 5 smartphones. One of the phones acts as P2P-GO and the other one as P2P client. In some tests, the P2P client is also connected to the Access Point. Also, in some tests, the Power Monitor Device measures the power consumption of the P2P client.
+
+\subsection{Capturing Air Packets}
+\label{sub-sec:proj-scopemonitormode}
+
+The first attempt to capture the packets for the Wi-Fi Direct connection was to use an Intel Dual Band Wireless-AC 7260 card \cite{cite-intel7260} in monitor mode then to use Wireshark \cite{cite-wireshark}  for analysis. The problem was that only control frames like RTS/CTS and Block ACK were captured but no data packets.
+
+However, the Wi-Fi Spectrum analyzer (see \labelindexref{Figure}{img:chananalyzer-capture}) showed us that channel 1 was almost fully occupied so data frames were transmitted but our card in monitor mode couldn't decode those frames.
+
+\fig[scale=0.5]{src/img/chananalyzer.jpg}{img:chananalyzer-capture}{Spectrum analyzer capture}
+
+After starting a discussion \cite{cite-monitordiscussion} with the Intel Wi-Fi driver maintainer (iwlwifi), it proved that the problem was caused by the lack of low-density parity-check (LDPC) coding capability in hardware. Our card, Intel 7260 supports only Viterbi decoding. The next step was trying to install an Intel 7265 card which does support LDPC. The problem was that our laptop uses the older mini-PCIe connection while we needed an M.2 connection for the 7265 card.
+
+Unable to install a newer card we tested an external card, a TP-Link TL-WN722N card \cite{cite-tplink} which proved to have LDPC capabilities. The problem with this card is the limitation to capture only 802.11n packets on the 2.4 frequency.
+
+Wireshark was setup with the SSID and the password for the Wi-Fi Direct connection in order to decrypt the air packets. This parameters were taken from the P2P-GO and setup in Wireshark: Edit->Preferences->Protocols->IEEE 802.11->Decryption Keys->wpa pwd.
+
+\begin{lstlisting}[language=C, frame=single, caption={Listing from /data/misc/wifi/p2p_supplicant.conf on the P2P GO},label=p2p_supplicant]
+network={
+	ssid="DIRECT-gQ-Android_cf8c"
+	bssid=be:f5:ac:ff:e5:df
+	psk="Lkb7rPop"
+	proto=RSN
+	key_mgmt=WPA-PSK
+	pairwise=CCMP
+	auth_alg=OPEN
+	mode=3
+	disabled=2
+	p2p_client_list=66:89:9a:81:0d:95
+}
+\end{lstlisting}
+
+\subsection{Setting up the Operating System}
+\label{sub-sec:proj-scopenexus5operatingsystem}
+
+Default instructions \cite{cite-compilingcm13} for compiling Cyanogen Mod 13 were used. However, there was a problem related to the extraction of proprietary blobs from the smartphone \cite{cite-proprietaryblobs}. The script used for extracting the proprietary blobs is located inside \textit{\$CM_ROOT/device/lge/hammerhead/extract-files.sh} and its role is to execute a series of \textit{adb pull} commands towards the phone. The script failed to download some files and the reported error was unexisting files. However, the real problem was that the \textit{adb pull} command had insufficient permissions for accesing those file. The solution was to start \textit{adb pull} with root permissions by running \textit{adb root} before running the \textit{extract-files.sh} script.
+
+Team Win Recovery Project (TWRP) was used for installing CM13 on the Nexus5 smartphone. This is an open-source software that provides a touchscreen-enabled interface for allowing users to install/update third-party firmware \cite{cite-twrp}. This software allowed us to install SuperSU for gaining root access.
+
+\subsection{Wi-Fi Direct Connection Parameters}
+\label{sub-sec:proj-scopep2pconnectionsectup}
+
+Our tests measure the power consumption for the P2P-Client device while sniffing packets from the air using a Wi-Fi card in monitor mode. So the Monsoon device has to stay connected to the P2P-Client while the Wi-Fi card is sniffing packets from the Wi-Fi Direct channel. The main problem was that the election of the P2P Group Owner/ P2P client and the selection of the best Wi-Fi channel was driven by the P2P Group Owner Negotiation process and there were cases when we measured the power consumption for the P2P GO and no data was captured by the monitor interface.
+
+In order to solve this problem, a smarthone that has this patch \cite{cite-p2ppatch} applied will become the P2P-GO and the communication channel frequency will be 2412 Mhz. For becoming the P2P-GO, the smartphone that has this patch applied will advertise a higher value for the intent and for the tie-breaker. Also, the advertised channel list will include a single supported channel.
+
+\subsection{Testbed for Power Measurement}
+\label{sub-sec:proj-scopepowertopology}
+
+The first step was to get access to the Nexus5 battery pins. This was pretty difficult because the battery is not replaceable and the access to internal components is difficult. Using a special smartphone dissasemble kit from IFixit \cite{cite-ifixit} access to battery pins was obtained.
+
+There are three pins for battery connection: two of them are for the regular + and - pins and the third one is connected to an internal thermistor, enabling the charger to avoid over-temperature problems. \labelindexref{Figure}{img:monsoon-setup} shows a black wire glued to the - pin, a yellow one to the + pin and the green one is for the thermistor.
+
+Once we connected the Nexus 5 pins to the Power Monitor and tried to supply current to the smartphone we encountered an Over Current Error from the Power Tool software (the software that comes with the device). After trying different values for current and voltage with no success, the following work-around was found: enable the voltage out for the Monsoon device (with default values for voltage and current, 3.7V with 4.7A) but with the smartphone disconnected in the first phase. After Power Tool reports that the voltage was enabled with no error, the smartphone can be connected.
+
+\fig[scale=0.4]{src/img/monsoon-setup.jpg}{img:monsoon-setup}{Monsoon Setup}
+
+The problems seems to be caused by the Monsoon power up sequence \cite{cite-manualmonsoon}:
+\begin{itemize}
+  \item Power up with no current limit for 20 miliseconds
+  \item Run for 1 second with the current limit set to 500 mA
+  \item Run continously with the current limit set to 4.6 A
+\end{itemize}
+
+\section{Virtual Interfaces}
+\label{sec:virtual-interfaces}
+
+The Wi-Fi chip used on Nexus 5 is Broadcom 4339 \cite{cite-wifichip} \cite{cite-ifixit}. This chip supports 20, 40 and 80Mhz wide channels up to 256QAM. The 802.11 supported technologies supported are a/b/g/n/ac and and it can reach single-stream spatial multiplexing up to 433.3 Mbps data rate. 
+
+The driver used for this chip is bcmdhd which is the Android version for the mainline Linux driver - brcmfmac \cite{cite-brcmfmac}. Unfortunately, bcmdhd is a Full Mac Driver, which means that the mac80211 processing is done in firmware, on the Wi-Fi chip. The firmware is proprietary and closed-source so no modification can be done at that level.
+
+The only modification that we need to do inside the driver was to create two virtual interfaces in the managed mode. 
+
+\begin{lstlisting}[language=C, frame=single, caption={Interface combinations for bcmdh driver},label=InterfaceCombinations]
+static const struct ieee80211_iface_combination
+sta_p2p_iface_combinations[] = {
+	{
+	.num_different_channels = 2,
+	.max_interfaces = 3,
+	.limits = sta_p2p_limits,
+	.n_limits = ARRAY_SIZE(sta_p2p_limits),
+	},
+};
+\end{lstlisting}
+
+Looking in the existing code, we noticed that the sta_p2p_iface_combinations structure supports the creation of 3 interfaces which can operate on two different channels. But if we look deeper in the sta_p2p_limits field we can see that only two interfaces can be truly used in parallel: one in station mode and the other one in P2P-GO/P2P Client Mode. The third interface can be used only as a buffer interface for the cases when the P2P-GO is removed and its corresponding interface has to migrate temporary to a station interface. However, we tried to use this third interface to connect to an 802.11 Access Point but the connection fails due a Prefferred Network Offload error. In PNO, the firmware is configured with a number of SSIDs and it notifies the host when it finds one of those. For solving the problem it seems that we need to investigate the PNO firmware code.
+
+\section{Channel Switching Tests}
+\label{sec:nexus5-chsw}
+
+For the first set of experiments we set the AP on the 5 Ghz frequency then we connected the first Nexus 5 acting as P2P GO to the AP using regular Wi-Fi. A Wi-Fi Direct connection is established between the Nexus 5 phones.
+ 
+\fig[scale=0.7]{src/img/topologyj.jpeg}{img:topologynexus5-setup}{Topology}
+
+\subsection{Channel-Switching Quantum}
+\label{sub-sec:chsw-time}
+
+In order to determine the switching time quantum, ping packets were generated simultaneously on both paths, from 192.168.49.1 towards 192.168.49.184, and from 192.168.0.101 towards 192.168.49.
+
+After analysing the RTT for both paths, a channel switching quantum of 60ms can be deduced. This quantum seems to be hard-coded as we tested with different ping intervals but the RTT distribution is the same (see Figure \ref{img:regular-wifi}, Figure \ref{img:wifi-direct}). Worse, even if we don't generate any traffic on one path (Regular Wi-Fi/Wi-Fi Direct), the switching time quantum is the same. This demonstrates that the channel-switching alghoritm runs with the same parameters in all situations and no algorithm for adjusting the channel switching quantum according to the traffic distribution is taken into consideration.
+
+\begin{figure}[h!]
+\includegraphics{src/img/regularwifi.eps}
+\captionof{figure}{RTT for the Regular Wi-Fi Path}
+\label{img:regular-wifi}
+\end{figure}
+
+\begin{figure}[h!]
+\includegraphics{src/img/wifidirectping.eps}
+\captionof{figure}{RTT for the Wi-Fi Direct Path}
+\label{img:wifi-direct}
+\end{figure}
+
+When the channel switching algorithm does not run, the average RTT value is very low. For example, Figure \ref{img:regularwifionly} shows the RTT value for the case when we have just a regular Wi-Fi connection. The situation is the same for the Wi-Fi Direct only connection.
+
+\begin{figure}[h!]
+\includegraphics{src/img/regularwifionly.eps}
+\captionof{figure}{RTT for the Regular Wi-Fi Path}
+\label{img:regularwifionly}
+\end{figure}
+
+\subsection{Channel-Switching Overhead}
+\label{sub-sec:chsw-overhead}
+
+The Channel Switch Overhead is the percent of time needed by the hardware to switch between two frequencies and no data can be transmitted or received during this switch. The idea of this test is to determine the maximum capacity of both paths by generating UDP packets with iperf in a single wifi scenario and getting the throughput value reported by iperf. Then, send UDP packets on both paths in a multiple wireless connectivity scenario with iperf and again get the throughput value. In an ideal case, if there is no channel switch overhead, the ratio between the throughput in a single wifi scenario and the throughput in a multi wifi scenario should be 2 for each channel.
+
+For the Regular Wi-Fi path, the channel capacity is  about 230 Mbits/s. This value was obtained by generating UDP traffic from 192.168.0.101 towards 192.168.0.100. For the Wi-Fi Direct Path the channel capacity is about 55Mbits/s. This value was obtained by generated UDP traffic from the P2P-GO towards the P2P-Client.
+
+The next step was to generate traffic on both paths in parallel. The iperf client used the maximum capacity of a path as parameter for bandwidth. The iperf server run on the P2P-client.
+
+\begin{figure}[h!]
+\includegraphics{src/img/throughpout.eps}
+\captionof{figure}{UDP traffic for both paths, in parallel}
+\label{img-thr}
+\end{figure}
+
+As can be seen in Figure \ref{img-thr}, the P2P throughput value is pretty stable and is about 30 Mbits/s. What is strange is that the throughput value for Regular Wi-Fi drops from about 85 Mbits/s to about 5 Mbits/s and this indicates an implementation bug in the channel switch algorithm. In order to determine the channel switch overhead, we can assume that the throughput for Regular Wi-Fi can maintain its value at 85Mbits/s. So the overhead is (1 - ((85 + 30) / (230 + 55) / 2)) * 100, which means that about 19\% of time is lost with the channel switching.
+
+\section{Average Power Tests - Channel Switching}
+\label{sec:nexus5-consumption}
+
+First of all we stopped all the running applications that came by default with the Nexus 5 devices. Then we measured the average power for 120s and made sure that there are no power spikes generated by an unwanted application. The average power in this case was 9.37mW.
+
+For the next experiments we wanted to measure the energy consumption for different type of downloads. The steps are the following:
+\begin{itemize}
+  \item connect to the phone using the USB cable (adb shell).
+  \item start an iperf instance: iperf -s -u -i 1 >> results_file \&\& nohup\&. Using this command we'll open a socket listening for UDP connections and the throughput results will be written in results file. The nohup command allows the iperf instance to run after we disconnect the USB cable.
+  \item disconnect the USB cable.
+  \item on the laptop start a long lasting UDP connection: iperf -c PHONE_IP_ADDRESS -u -t 6000 -i 1
+  \item after the client iperf connection started, push the “RUN” button in the Monsoon device that will start gather consumption statistics.
+  \item after Monsoon gathered results for 120 seconds, press “STOP” button in the Monsoon Software and save the results: the consumption file resulted from Monsoon and the results file from the phone where we have throughput.
+\end{itemize}
+
+\subsection{Phone connected only to the AP}
+\label{sub-sec:ap-only}
+The average power for 120s when the phone is connected just to the AP but no data is transferred is 60.57mW. This value should be lower but it seems that some IPV6 Router Advertisements messages introduce some spikes in the power consumption graph from \labelindexref{Figure}{img:ap-only}. The blue line represents the average power, the red line represents the
+minimum power and the green one represents the maximum power.
+
+\fig[scale=0.5]{src/img/aponly.png}{img:ap-only}{Power when the phone is connected just to the AP}
+
+\subsection{Phone connected in parallel to the AP and to the P2P GO}
+\label{sub-sec:app2p-parallel}
+In this case the average power consumption for 120s is 441.36mW. This value is correct as I repeated the experiments and the results are consistent.
+
+\fig[scale=0.8]{src/img/app2pbis.png}{img:ap-p2p}{Power when the phone is connected in parallel to AP and to the P2P-GO}
+
+\subsection{Data transfer using the Regular Wi-Fi connection, P2P connection only active}
+\label{sub-sec:transfer-parallel}
+
+In this experiment, the average power consumption for combined regular Wi-Fi + Wi-Fi Direct is compared with the average power consumption for regular Wi-Fi when we use the same throughput values. For this experiments, the Wi-Fi Direct connection is not used for data transfer, just an active connection between the P2P client and the P2P GO is kept alive.
+
+Detailed steps for the experiment are illustrated next. For x in (2.5, 5, 7.5, 10 Mbits/s) do:
+\begin{itemize}
+  \item connect the phone both to the AP and to the P2P GO
+  \item on the phone start the iperf server to listen for new connections on the interface corresponding to the AP
+  \item on the laptop generate traffic towards the client (iperf -c 192.168.0.100 -b x)
+  \item calculate the average throughput value using the statistics file from the phone and save this average value (call it y)
+  \item save the y value and the associated power average value
+\end{itemize}
+
+The results are:
+
+\begin{table}[h!]
+  \centering
+  \caption{Power Monitor measurements (P2P + Regular Wi-Fi)}
+  \label{tab:table1}
+  \begin{tabular}{ccc}
+    \toprule
+    Throughput (Mbits/s) & Average Power (mW) \\
+    \midrule
+    2.49 & 472.8\\
+    4.99 & 512.67\\
+    7.48 & 547.66\\
+    9.89 & 583.29\\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{itemize}
+  \item connect the phone phone just to the AP
+  \item on the phone start the iperf server
+  \item on the laptop generate traffic towards the client (iperf -c IP_ADDR_PHONE -b y)
+  \item On the client calculate the average throughput and save this average value
+\end{itemize}
+
+The results are:
+
+\begin{table}[h!]
+  \centering
+  \caption{Power Monitor measurements (Regular Wi-Fi only)}
+  \label{tab:table1}
+  \begin{tabular}{ccc}
+    \toprule
+    Throughput (Mbits/s) & Average Power (mW) \\
+    \midrule
+    2.49 & 573.29\\
+    4.99 & 634.14\\
+    7.48 & 671.45\\
+    9.89 & 752.45\\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{figure}
+\includegraphics{src/img/powervalues.eps}
+\end{figure}
+
+It seems that by simply enabling the Wi-Fi Direct connection we get a power consumption improvement. We repeated the experiments several times and the results are consistent.
+
+\subsection{Data transfer using both the Regular Wi-Fi connection and the P2P connection}
+\label{sub-sec:transfer-parallel2}
+
+In this experiment, the average power consumption for combined regular Wi-Fi + Wi-Fi Direct was compared with the average power consumption for regular Wi-Fi when the same throughput values are used. Both the regular Wi-Fi and the Wi-Fi Direct connections were used for data transfer.
+
+\begin{itemize}
+  \item connect the phone both to the AP and to the P2P GO
+  \item on the phone start 2 iperf server instances: one that listen for new connections on the interface corresponding to the AP and one that listen for new connection on the interface corresponding to the Wi-Fi Direct interface
+  \item on the laptop generate traffic towards the client (iperf -c 192.168.0.100 -b x, iperf -c 192.168.49.1 -b x)
+  \item calculate the combined average throughput value using the statistics file from the phone and save this average value (call it y)
+  \item save the y value and the associated power average value 
+\end{itemize}
+
+The results are:
+
+\begin{table}[h!]
+  \centering
+  \caption{Power Monitor measurements (Regular Wi-Fi + P2P parallel transfer)}
+  \label{tab:table1}
+  \begin{tabular}{ccc}
+    \toprule
+    Throughput (Mbits/s) & Average Power (mW) \\
+    \midrule
+     4.99 & 472.8 \\
+     9.96 & 575.67 \\
+     14.5 & 685.19\\
+     19.05 & 742.89 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{itemize}
+  \item connect the phone phone just to the AP
+  \item on the phone start the iperf server
+  \item on the laptop generate traffic towards the client (iperf -c 192.168.0.100 -b y)
+  \item on the client calculate the average throughput and save this average value
+\end{itemize}
+
+The results are:
+
+\begin{table}[h!]
+  \centering
+  \caption{Power Monitor measurements (Regular Wi-Fi transfer only)}
+  \label{tab:table1}
+  \begin{tabular}{ccc}
+    \toprule
+    Throughput (Mbits/s) & Average Power (mW) \\
+    \midrule
+     4.99 & 634.14 \\
+     9.96 & 757.79 \\
+     14.5 & 787.36 \\
+     19.05 & 985.13 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{figure}
+\includegraphics{src/img/powervaluesparallel.eps}
+\end{figure}
+
+Also In this case the power average values are better in case of regular Wi-Fi combined with Wi-Fi Direct.
+
+\section{Average Power Tests - Single Channel}
+\label{sec:nexus5-consumption}
+
+For this test, both the Regular Wi-Fi and the Wi-Fi Direct connections are using the same 2.4 channel and no data is transferred, only the management frames. The average power for 120s is around 210mW. In this case no energy spikes are observed which demonstrates that there is no power saving scheme implemented.
+
+\fig[scale=0.65]{src/img/app2psame.png}{img:ap-p2psame}{Power when the phone is connected in parallel to AP and to the P2P-GO}
+
+
+\section{Power Management}
+\label{sec:PowerManagement}
+
+For understanding the multiple Wi-Fi connectivity on Nexus 5, traffic was generated using the ping command. An interesting behaviour occured when ICMP packets were generated at intervals greater than 500ms: once the screen was turned off no packets were put into the air. After analysing the Broadcom driver code, we found the root of this behaviour inside \textit{kernel/lge/hammerhead/drivers/net/wireless/bcmdhd/dhd.h}. The define \textit{DHD_PACKET_TIMEOUT_MS} is set to 500 which mean that if the ping interval is lower than this timeout, the ICMP packets are sent even when the screen is turned off, otherwise the ping activity is suspended and resumed only after the screen is on again. 
+
+It proved that \textit{DHD_PACKET_TIMEOUT_MS} configures the timeout for a wakeup event which is the basis for the Android Power Management model. For a better understanding of this model, the original discussion from the mailing list \cite{cite-wakesdiscussion} is analysed.
+
+The main task of the Android PM is first to verify that there are no pending wakeup events, then to freeze all user/kernel space processes and allow the device to go in suspend mode. Stated problems are related to the loss of wakeup events. First, if a wakeup event occurs exactly at the same time when /sys/power/state is being written to, the event may be delievered to user space right before the freezing of it in which case the space consumer of the veent may not be able to process it before the system is suspended. Second, if a wakeup event occurs after user space has been frozen and that event is not a wakeup interrupt, the kernel will not react to it and the system will be suspended.
+
+The sys interface for PM management is:
+\begin{itemize}
+  \item /sys/power/state - write "mem" to enter suspend mode
+  \item /sys/power/wakeup_count - counter of wakeup events. This value will be read in the kernel code base and verified if equal or not to an interval counter. This check is done to know if the device can enter or not in suspend ode and write in /sys/power/state. May be read from or written to by user space. Reads will always succeed and return the current value of the wakeup events counter. Writes, however, will only succeed if the written number is equal to the current value of the wakeup events counter. If a write is successful, it will cause the kernel to save the current value of the wakeup events counter and to compare the saved number with the current value of the counter at certain points of the subsequent (or hibernate) sequence. If the two values don't match, the suspend will be aborted just as though a wakeup interrupt happened. Reading from /sys/power/wakeup_count again will turn that mechanism off;
+\end{itemize}
+
+The Android PM is a user-space process that that will first read from /sys/power/wakeup_count. Then it will check all user space consumers of wakeup events known to it for unprocessed events. If there are any, it will wait for then to be processed and repeat. In turn, if there are not any, it will try to write to /sys/power/wakeup_count and if the write is successful, it will write to /sys/power/state to start suspend, so if any wakeup events occur past that point, they will be noticed by the kernel and will eventually cause the suspend to be aborted.
+
+Drivers and kernel subsystems can signal wakeup events. If the event is not explicitly handed over to user space and "instantaneous", they can simply call \textit{pm_wakeup_event()} and be done with it. Second, if the event is going to be delivered to user space, the subsystem that processes the event can call pm_wakeup_begin() right when the event is detected and pm_wakeup_end() when it's been handed over to user space. \textit{pm_get_wakeup_count()} and \textit{pm_save_wakeup_count()} fail if they are called when events_in_progress is nonzero. For pm_save_wakeup_count() that's pretty obvious (I think) and it also kind of makes sense for pm_get_wakeup_count(), because that will tell the reader of /sys/power/wakeup_count that the value is going to change immediately so it should really try again.”;
+
+One possible problem that can still appear in PM is that processes can be frozen before an event is handled by the kernel. For example and interrupt handler might receive the event and start processing it by calling \textit {pm_request_resume} - but if the PM workqueue thread is already frozen then the processing won't finish until something else wakes the system up.
+
+The codebase for this analysis is represented by:
+\begin{itemize}
+  \item kernel/lge/hammerhead/drivers/net/wireless/bcmdhd
+  \item kernel/lge/hammerhead/drivers/base/power
+  \item kernel/lge/hammerhead/kernel/power
+  \item system/core/libsuspend
+  \item sysfs
+\end{itemize}
+
+ 
+
+ 
+
+
+
+
+
+
+
+
+
