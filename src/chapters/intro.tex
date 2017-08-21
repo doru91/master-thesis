@@ -1,89 +1,3 @@
-\chapter{Introduction}
-\label{chapter:intro}
-
-\textbf{This is just a demo file. It should not be used as a sample for a thesis.}\\
-\todo{Remove this line (this is a TODO)}
-
-
-\section{Project Description}
-\label{sec:proj}
-
-\subsection{Project Scope}
-\label{sub-sec:proj-scope}
-
-This thesis presents the \textbf{\project}.
-
-This is an example of a footnote \footnote{\url{www.google.com}}. You can see here a reference to \labelindexref{Section}{sub-sec:proj-objectives}.
-
-Here we have defined the CS abbreviation.\abbrev{CS}{Computer Science} and the UPB abbreviation.\abbrev{UPB}{University Politehnica of Bucharest}
-
-The main scope of this project is to qualify xLuna for use in critical systems.
-
-
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean aliquam lectus vel orci malesuada accumsan. Sed lacinia egestas tortor, eget tristiqu dolor congue sit amet. Curabitur ut nisl a nisi consequat mollis sit amet quis nisl. Vestibulum hendrerit velit at odio sodales pretium. Nam quis tortor sed ante varius sodales. Etiam lacus arcu, placerat sed laoreet a, facilisis sed nunc. Nam gravida fringilla ligula, eu congue lorem feugiat eu.
-
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean aliquam lectus vel orci malesuada accumsan. Sed lacinia egestas tortor, eget tristiqu dolor congue sit amet. Curabitur ut nisl a nisi consequat mollis sit amet quis nisl. Vestibulum hendrerit velit at odio sodales pretium. Nam quis tortor sed ante varius sodales. Etiam lacus arcu, placerat sed laoreet a, facilisis sed nunc. Nam gravida fringilla ligula, eu congue lorem feugiat eu.
-
-
-\subsection{Project Objectives}
-\label{sub-sec:proj-objectives}
-
-We have now included \labelindexref{Figure}{img:report-framework}.
-
-\fig[scale=0.5]{src/img/reporting-framework.pdf}{img:report-framework}{Reporting Framework}
-
-
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean aliquam lectus vel orci malesuada accumsan. Sed lacinia egestas tortor, eget tristiqu dolor congue sit amet. Curabitur ut nisl a nisi consequat mollis sit amet quis nisl. Vestibulum hendrerit velit at odio sodales pretium. Nam quis tortor sed ante varius sodales. Etiam lacus arcu, placerat sed laoreet a, facilisis sed nunc. Nam gravida fringilla ligula, eu congue lorem feugiat eu.
-
-We can also have citations like \cite{cite-wifichip}.
-
-\subsection{Related Work}
-
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean aliquam lectus vel orci malesuada accumsan. Sed lacinia egestas tortor, eget tristiqu dolor congue sit amet. Curabitur ut nisl a nisi consequat mollis sit amet quis nisl. Vestibulum hendrerit velit at odio sodales pretium. Nam quis tortor sed ante varius sodales. Etiam lacus arcu, placerat sed laoreet a, facilisis sed nunc. Nam gravida fringilla ligula, eu congue lorem feugiat eu.
-
-
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean aliquam lectus vel orci malesuada accumsan. Sed lacinia egestas tortor, eget tristiqu dolor congue sit amet. Curabitur ut nisl a nisi consequat mollis sit amet quis nisl. Vestibulum hendrerit velit at odio sodales pretium. Nam quis tortor sed ante varius sodales. Etiam lacus arcu, placerat sed laoreet a, facilisis sed nunc. Nam gravida fringilla ligula, eu congue lorem feugiat eu.
-
-
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean aliquam lectus vel orci malesuada accumsan. Sed lacinia egestas tortor, eget tristiqu dolor congue sit amet. Curabitur ut nisl a nisi consequat mollis sit amet quis nisl. Vestibulum hendrerit velit at odio sodales pretium. Nam quis tortor sed ante varius sodales. Etiam lacus arcu, placerat sed laoreet a, facilisis sed nunc. Nam gravida fringilla ligula, eu congue lorem feugiat eu.
-
-We are now discussing the \textbf{Ultimate answer to all knowledge}.
-This line is particularly important it also adds an index entry for \textit{Ultimate answer to all knowledge}.\index{Ultimate answer to all knowledge}
-
-\subsection{Demo listings}
-
-We can also include listings like the following:
-
-% Inline Listing example
-\lstset{language=make,caption=Application Makefile,label=lst:app-make}
-\begin{lstlisting}
-CSRCS = app.c
-SRC_DIR =..
-include $(SRC_DIR)/config/application.cfg
-\end{lstlisting}
-
-Listings can also be referenced. References don't have to include chapter/table/figure numbers... so we can have hyperlinks \labelref{like this}{lst:makefile-test}.
-
-\subsection{Tables}
-
-We can also have tables... like \labelindexref{Table}{table:reports}.
-
-\begin{center}
-\begin{table}[htb]
-  \caption{Generated reports - associated Makefile targets and scripts}
-  \begin{tabular}{l*{6}{c}r}
-    Generated report & Makefile target & Script \\
-    \hline
-    Full Test Specification & full_spec & generate_all_spec.py  \\
-    Test Report & test_report & generate_report.py  \\
-    Requirements Coverage & requirements_coverage &
-    generate_requirements_coverage.py   \\
-    API Coverage & api_coverage & generate_api_coverage.py  \\
-  \end{tabular}
-  \label{table:reports}
-\end{table}
-\end{center}
-
 \chapter{Nexus 5 Analysis}
 
 One of the first Android phones used for studying the Multiple Wireless Connectivity was the Google Nexus 5 \cite{cite-nexus5}. The main reason for this choice is the availability of both 2.4 Ghz and 5Ghz Wi-Fi frequencies which opens the door for the analysis of channel switching use-cases. 
@@ -211,7 +125,7 @@ After analysing the RTT for both paths, a channel switching quantum of 60ms can 
 \label{img:wifi-direct}
 \end{figure}
 
-When the channel switching algorithm does not run, the average RTT value is very low. For example, Figure \ref{img:regularwifionly} shows the RTT value for the case when we have just a regular Wi-Fi connection. The situation is the same for the Wi-Fi Direct only connection.
+When the channel switching algorithm does not run, the average RTT value is very low, with an average RTT value at around 5 ms. For example, Figure \ref{img:regularwifionly} shows the RTT value for the case when we have just a regular Wi-Fi connection. The situation is the same for the Wi-Fi Direct only connection.
 
 \begin{figure}[h!]
 \includegraphics{src/img/regularwifionly.eps}
@@ -219,6 +133,7 @@ When the channel switching algorithm does not run, the average RTT value is very
 \label{img:regularwifionly}
 \end{figure}
 
+\newpage
 \subsection{Channel-Switching Overhead}
 \label{sub-sec:chsw-overhead}
 
@@ -236,6 +151,7 @@ The next step was to generate traffic on both paths in parallel. The iperf clien
 
 As can be seen in Figure \ref{img-thr}, the P2P throughput value is pretty stable and is about 30 Mbits/s. What is strange is that the throughput value for Regular Wi-Fi drops from about 85 Mbits/s to about 5 Mbits/s and this indicates an implementation bug in the channel switch algorithm. In order to determine the channel switch overhead, we can assume that the throughput for Regular Wi-Fi can maintain its value at 85Mbits/s. So the overhead is (1 - ((85 + 30) / (230 + 55) / 2)) * 100, which means that about 19\% of time is lost with the channel switching.
 
+\newpage
 \section{Average Power Tests - Channel Switching}
 \label{sec:nexus5-consumption}
 
@@ -251,6 +167,7 @@ For the next experiments we wanted to measure the energy consumption for differe
   \item after Monsoon gathered results for 120 seconds, press “STOP” button in the Monsoon Software and save the results: the consumption file resulted from Monsoon and the results file from the phone where we have throughput.
 \end{itemize}
 
+\newpage
 \subsection{Phone connected only to the AP}
 \label{sub-sec:ap-only}
 The average power for 120s when the phone is connected just to the AP but no data is transferred is 60.57mW. This value should be lower but it seems that some IPV6 Router Advertisements messages introduce some spikes in the power consumption graph from \labelindexref{Figure}{img:ap-only}. The blue line represents the average power, the red line represents the
@@ -267,7 +184,7 @@ In this case the average power consumption for 120s is 441.36mW. This value is c
 \subsection{Data transfer using the Regular Wi-Fi connection, P2P connection only active}
 \label{sub-sec:transfer-parallel}
 
-In this experiment, the average power consumption for combined regular Wi-Fi + Wi-Fi Direct is compared with the average power consumption for regular Wi-Fi when we use the same throughput values. For this experiments, the Wi-Fi Direct connection is not used for data transfer, just an active connection between the P2P client and the P2P GO is kept alive.
+In this experiment, the average power consumption for combined regular Wi-Fi + Wi-Fi Direct is compared with the average power consumption for regular Wi-Fi when we use the same throughput values. For this experiments, the Wi-Fi Direct connection is not used for data transfer, just an active connection between the P2P client and the P2P GO is kept alive. 
 
 Detailed steps for the experiment are illustrated next. For x in (2.5, 5, 7.5, 10 Mbits/s) do:
 \begin{itemize}
@@ -323,9 +240,10 @@ The results are:
 
 \begin{figure}
 \includegraphics{src/img/powervalues.eps}
+\captionof{figure}{Average Power for 120 seconds}
 \end{figure}
 
-It seems that by simply enabling the Wi-Fi Direct connection we get a power consumption improvement. We repeated the experiments several times and the results are consistent.
+It seems that by simply enabling the Wi-Fi Direct connection we get a power consumption improvement. We repeated the experiments several times and the results are consistent. This improvement could be explained by the batching mode of 802.11 where several packets are aggregated in a single, larger one. While the phone is on the Wi-Fi Direct channel, the packets are aggregated by the AP on the Regular Wi-Fi connection. When the client switches again on the Regular Wi-Fi connection, the larger packets are transmitted faster and more energy is saved.
 
 \subsection{Data transfer using both the Regular Wi-Fi connection and the P2P connection}
 \label{sub-sec:transfer-parallel2}
@@ -383,8 +301,9 @@ The results are:
   \end{tabular}
 \end{table}
 
-\begin{figure}
+\begin{figure}[bp!]
 \includegraphics{src/img/powervaluesparallel.eps}
+\captionof{figure}{Average Power for 120 seconds}
 \end{figure}
 
 Also In this case the power average values are better in case of regular Wi-Fi combined with Wi-Fi Direct.
@@ -426,6 +345,13 @@ The codebase for this analysis is represented by:
   \item system/core/libsuspend
   \item sysfs
 \end{itemize}
+
+\section{Conclusions}
+\label{sec:conclusions}
+
+The implementation for multiple Wireless Connectivity on Android has multiple problems. Both for Single and Multiple Channel Connectivity, there is no power save algorithm implemented and the Wi-Fi card enters a high energy-mode once the second connection is established. Also, the channel swirching algorithm is pretty rudimentary because the channel switching quantum is the same with no load-balancing depending on the traffic pattern. 
+
+Unfortunately, no improvements could be done to this algorithm as the code for it is in the Broadcom closed-source firmware. The next step was to find a smartphone whose firmware code for Wi-Fi is open-source but it seems that all implementations are proprietary solutions.
 
  
 
