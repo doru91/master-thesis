@@ -1,3 +1,23 @@
+\chapter{State of the Art for IEEE 802.11 Power Save}
+
+The power save algorithm described in this thesis is implemented starting from the classical power save algorithm implemented in the ath9k_htc driver with direct applicability to the AR9271 chip.
+
+In this chapter I present the AR9271 chipset and the interaction between mac80211, ath9k_htc driver and AR9271 firmware with emphasis on the power save mechanism.
+
+\section{AR9271 Chip}
+\label{sec:chip}
+
+As stated in the datasheet, the Atheros AR9271 is a highly integrated single-chip solution for 2.4 GHz 802.11n-ready wireless local area networks (WLANs) that enables a high-performance 1x1 configuration for wireless station applications demanding robust link quality and maximum throughput and range. The AR9271 integrates a multi-protocol MAC, baseband processor, analog-to-digital and digital-to-analog (ADC/DAC) converters, 1x1 radio transceiver, RF switch, and USB interface in an all-CMOS device for low power and small form factor applications.
+
+\fig[scale=0.5]{src/img/ar9271.png}{img:ar9271-overview}{AR9271 system block diagram} 
+
+The AR9271 implements half-duplex OFDM, CCK, and DSSS baseband processing, supporting 72.2 Mbps for 20 MHz and 150 Mbps for 40 MHz channel and IEEE 802.11b/g data rates. Other features include signal detection, automatic gain control, frequency offset estimation, symbol timing, and channel estimation. The AR9271 MAC supports the 802.11 wireless MAC protocol, 802.11i security, receive and transmit filtering, error recovery, and quality of service (QoS).
+
+The AR9271 supports one transmit traffic stream and one receive traffic stream using one integrated Tx chain and one receive chain for high throughput and range performance. The Tx chain combines baseband in-phase (I) and quadrature (Q) signals, converts them to the desired frequency, and drives the RF signal to the antenna. The frequency synthesizer supports frequencies defined by IEEE 802.11b/g/n specifications.
+
+The AR9271 supports frame data transfer to and from the host using a USB interface that provides interrupt generation/reporting, power save, and status reporting. Other external interfaces include serial EEPROM and GPIOs. The AR9271 is interoperable with standard legacy 802.11b/g devices.
+
+
 \chapter{Nexus 5 Analysis}
 
 One of the first Android phones used for studying the Multiple Wireless Connectivity was the Google Nexus 5 \cite{cite-nexus5}. The main reason for this choice is the availability of both 2.4 Ghz and 5Ghz Wi-Fi frequencies which opens the door for the analysis of channel switching use-cases. 
@@ -401,7 +421,11 @@ This technique proved to be useful because the graphic for the avergage power wh
 \subsection{Firmware Debugging for the Wi-Fi Dongle}
 \label{sec:firmwaredebugging}
 
-The AR9271 is a USB/Wifi SoC with onboad RAM, ROM, flash and the actual wireless chip.  The wireless core is an off-shoot of the AR9285. It is a single-chip solution. For firmware debugging, the AR9271 chip has multiple GPIO pins which can be configured to work in UART mode.  Gathering data from these pins is done using a TTL UART adapter. For example, the operating system running on the SoC offers the possibility to print the value of variables.
+The AR9271 is a USB/Wifi SoC with onboad RAM, ROM, flash and the actual wireless chip.  The wireless core is an off-shoot of the AR9285, a single-chip solution. For firmware debugging, the AR9271 chip has 16 GPIO pins and some of them can be configured to work in UART mode.  Gathering data from these pins is done using a TTL UART adapter. For example, the operating system running on the SoC offers the possibility to print the value of variables.
+
+Our first approach was to solder the TX/RX wires of the TTL UART directly to the GPIO pins of the AR9271 chip from the TP-Link Dongle. Unfortuntely, the distance between two nearby pins is very small and we didn't have specialized soldering equipment. The solution was to use another dongle, a ALFA Network AWUS036NHA which uses the same AR9271 chip but has accesible UART lines on the PCB.
+
+\fig[scale=0.7]{src/img/ttl.jpg}{img:chananalyzer-capture}{TODO}
 
 
 
