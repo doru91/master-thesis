@@ -353,7 +353,58 @@ The implementation for multiple Wireless Connectivity on Android has multiple pr
 
 Unfortunately, no improvements could be done to this algorithm as the code for it is in the Broadcom closed-source firmware. The next step was to find a smartphone whose firmware code for Wi-Fi is open-source but it seems that all implementations are proprietary solutions.
 
- 
+\chapter{Power-Save Algorithm for Multiple Wireless Connectivity}
+
+As shown in the previous chapter, the first step for implementing a power save algorithm for multiple wireless connectivity is an open-source firmware. In most of the cases this also implies an open-source hardware described by a datasheet. This is due to the fact that the firmware code works directly with the Wi-Fi card registers.
+
+Currently, there is no smartphone whose firmware is open-source for the Wi-Fi card so the work-around was to use an Wi-Fi dongle, a TP-Link TL-WN722N card \cite{cite-tplink} who is totally open-source. This chapter starts with the challenges in using this dongle with Nexus 5, it continues with an analysis of the open-source firwmare and it presents our algorithm for Power Save implemented on top of this platform.
+
+\section{Using the Wi-Fi dongle with Nexus 5}
+\label{sec:donglesmartphone}
+
+The micro-USB port of the smartphone was used for connecting the Wi-Fi dongle, as can be observed in \labelindexref{Figure}{img:dongle-wifi}. The driver used by the dongle is ath9k_htc so we had to enable loadable module support plus ath9k_htc in the kernel menuconfig. However there was an 'Exec format' error while trying to insert the ath9k_htc.ko module using the insmod shell command. The insmod command calls in the bacground the init_module system call:
+
+\begin{lstlisting}[language=C, frame=single, caption={init_module system call},label=InterfaceCombinations]
+int init_module(void *module_image, unsigned long len, const char *param_values);
+\end{lstlisting}
+
+\fig[scale=0.2]{src/img/nexus5kali.jpg}{img:dongle-wifi}{Wi-Fi dongle connected to Nexus 5}
+
+The role of the init_module is to load an ELF image into kernel space, perform the necessary relocations and initializations then run the module's init function. This functions receives third parameters: the module_image argument points to a buffer containing the binary image to be loaded; len specifies the size of that buffer and the param_values is a sting containing space-delimited specifications of the values for module parameters. In our case, there was a problem in the busybox implementation for insmod: the second argument was 8 bytes long instead of 4. When the init_modules was looking for the parameters passed on the stack and was trying to parse the third parameter it would actually look in the last 4 bytes of the second parameter, which were all zeros in most of the cases. So the third parameter was NULL in most of the cases. Later, in kernel space when SYSCALL_DEFINE3 is caled with a NULL parameter, the -EFAULT error is set. The solution was to use a 4 byte long parameter for the len argument.
+
+\subsection{Measuring the energy consumption for the Wi-Fi Dongle}
+\label{sec:dongleenergy}
+
+The chipset mounted inside the TP-Link dongle is AR9271. Both the firmware \cite{cite-firmware} and the datasheet are open-source. In order to avoid the noise introduced by the phone components and by the USB layer, our first approach was to measure the energy consumption of the AR9271 chipset only. If we could find an entry point for the current in the AR9271 chip then we could easily use the AUX port of the power monitor device. This port allows for simultaneous measurement of the current going through an external power supply by using a sense resistor with a very low resistance (0.1 ohm) and a bayonet Neill-Concelman (BNC) connector.
+
+AR9271 has 68 pins and the datasheet states that pins 17, 26, 33,47 represents digital 3.3 V power supply - VDDP33. Having multiple 3.3V power supply pins is common practice because it allows the PCB designer to create better PCBs in terms of RF immunity, RF emissions and signal crosstalk. 
+
+\fig[scale=0.3]{src/img/donglefront.jpg}{img:dongle-front}{A9271 subsystem from TP-Link WN7222N}
+
+However, the power monitor device has a single grabber for IN current so a common entry point for these multiple 3.3V pins was was needed. Although the datasheet for the AR9271 chip is open-source, the datasheet for the entire TP-Link Dongle is closed-source. \labelindexref{Figure}{img:dongle-front} shows the circuit around the AR9271 chip and it seems that the solution to the above problem would be to intercept the 3.3V rail after the step down converter, the trace right after 4R7, highlighted with red. Probably, the power consumption parameters from section 6.9 o f the datasheet were gathered using this technique. More details about this discussion can be found at \cite{cite-ar9271} 
+
+Because the above assumptions were not backed-up by a datasheet we decided that is safer to measure the power consumption of the entire USB dongle. This was achieved by using the USB channel of the power monitor that offers the possibility to intercept the connection between the Wi-Fi Dongle and a USB port. More exactly, on the Power Monitor device are two ports: an USB type A port and a USB type B port. The Wi-Fi dongle was plugged-in the USB type A port, while the the laptop is connected to the USB type B port. The Monsoon Software offers the possibility to monitor this  USB channel.
+
+To download code or data when testing a device, USB can be used to connect the device to
+the Mobile Device Power Monitor. However, when connecting to USB, USB charges the
+device, which disturbs the current measurements. To remedy this, the Mobile Device Power
+Monitor has an Auto USB passthrough mode. Auto USB passthrough mode is useful
+for testing, because in Auto USB passthrough mode, the USB pass-through is
+disconnected whenever sampling starts. After sampling has completed, USB is reconnected
+automatically so that test data can be loaded to the device. The Auto USB passthrough
+mode setting is shown in below in \labelindexref{Figure}{img:usb-controls}.
+
+This technique proved to be useful because the graphic for the avergage power when no data is transmitted/received is constant and we were able to see the traffic spikes generated when by the AR9271 enters/exit sleep mode.
+
+\fig[scale=1]{src/img/usbm.png}{img:usb-controls}{Options for USB channel monitoring}
+
+\subsection{Firmware Debugging for the Wi-Fi Dongle}
+\label{sec:firmwaredebugging}
+
+The AR9271 is a USB/Wifi SoC with onboad RAM, ROM, flash and the actual wireless chip.  The wireless core is an off-shoot of the AR9285. It is a single-chip solution. For firmware debugging, the AR9271 chip has multiple GPIO pins which can be configured to work in UART mode.  Gathering data from these pins is done using a TTL UART adapter. For example, the operating system running on the SoC offers the possibility to print the value of variables.
+
+
+
 
  
 
