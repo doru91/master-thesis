@@ -17,6 +17,141 @@ The AR9271 supports one transmit traffic stream and one receive traffic stream u
 
 The AR9271 supports frame data transfer to and from the host using a USB interface that provides interrupt generation/reporting, power save, and status reporting. Other external interfaces include serial EEPROM and GPIOs. The AR9271 is interoperable with standard legacy 802.11b/g devices.
 
+\section{IEEE802.11 Power Save}
+\label{sec:powersaveieee80211}
+
+As decribed at \cite{cite-powersavestandard}, to assist stations with power saving, Access Points (APs) are designed to buffer frames for a station when that station is in power save mode and to transmit them later to the station when the AP knows the station will listen. When a station is in power save mode, it turns off its transmitter and receiver to preserve energy. It takes less power for a station to turn its receiver on to listen to frames than to turn it its transmitter on to transmit frames. For this reason, it's more power-efficient for an AP to inform a station if it has buffered frames present on the AP than to have the station poll the AP querying if frames are present.
+
+\subsection{Target Beacon Transmission Time Time (TBTT) and beacon interval}
+\label{sub-sec:proj-tbtt}
+
+Target Beacon Transmission Time Time (TBTT) is the time at which a node (AP or station when in Ad-hoc) must send a beacon. The time difference between two TBTTs is known as the beacon interval. The beacon interval is given in Time Units (TU), each TU represents 1024 microseconds. The beacon interval is typically set to 100 TUs (102400 microseconds, or 102.4 ms) and its length is two bytes.
+
+During association, a “Listen Interval” field is provided by the station. The listen interval is given in beacon interval units, so essentially it tells the AP how many beacons it wants to ignore before turning the receiver on. Two bytes are used to represent he listen interval. Depending on how the AP is tuned, usually based on the amount of space desired for buffered frames, the association may or may not be rejected. After the listen interval the AP does not guarantee it will buffer frames for the station anymore and may discard them. As might be expected then, the listen interval can be used by the AP as a guaranteed maximum time before stations listen to one of their beacons.
+
+\subsection{The TIM information element}
+\label{sub-sec:proj-timinfoelement}
+
+The IEEE-802.11 standards chose to use a bitmap to indicate to any sleeping listening stations if the AP has any buffered frames present for it. Because stations should listen to at least one beacon before the listen interval, the AP periodically sends this bitmap on its beacons as an information element. The bitmask is called the Traffic Indication Map and consists of 2008 bits, each bit representing the Association Id (AID) of a station. For example, the TIM information element allows you to transfer 1 byte up to the entire 251 bytes (2008 bits) of the TIM. You are allowed to transmit a smaller TIM bitmap as it is expected that only a few number of stations will be asleep. Because of this the bitmap values passed in the TIM information element is called a partial virtual bitmap. To allow you to transmit only a partial bitmap you must make use of the bitmap control and length fields of the TIM information element.
+
+\subsection{Retrieving buffered unicast frames}
+\label{sub-sec:proj-buffered}
+
+After a station receives a TIM and if its sees that the AP has buffered frames for it, it must send a Power Save Poll (NULL frame with Power Save Bit Set) control frame to retrieve each buffered frame on the AP. A station may go back to sleep after the PS-Poll ↔ frame exchange or once the TIM no longer has its AID present.
+
+\subsection{Delivery Traffic Indication Map (DTIM), DTIM period}
+\label{sub-sec:proj-dtim}
+
+We use a special type of TIM to to announce that the AP is about to transmit all buffered broadcast and multicast frames called the Delivery Traffic Indication Map (DTIM). After this DTIM the AP will send all buffered broadcast and multicast frames. The DTIM will be sent every DTIM period. The DTIM period is set on the TIM information element on the DTIM period field. This field is one byte and represents the number of beacon intervals that must go by before a new DTIM is sent. The DTIM count on the TIM information element tells stations how many beacons must be transmitted before receiving the next DTIM. The DTIM count will be 0 when we've reached a DTIM.
+
+\section{mac80211 power save}
+\label{sec:mac80211}
+This chapter describes the main functions used by the mac80211 layer for implementing IEEE802.11 Power Save.
+
+Important flags:
+\begin{itemize}
+\item IEEE80211_CONF_PS: Enable 802.11 power save mode (managed mode only). This is the standard power save mode, meaning that the hardware still wakes up for beacons, is able to transmit frames and receive the possible acknowledgment frames. Not to be confused with hardware specific wakeup/sleep states.
+\item IEEE80211_CONF_CHANGE_PS: signals that the PS flag or the dynamic PS timeout changed. This flag is checked if IEEE80211_CONF_PS is set.
+\item IEEE_80211_HW_SUPPORTS_PS: hardware support for power save.
+\item IEEE80211_STA_NULLFUNC_ACKED: set when the NULL frame with PS bit set is ACK'ed.
+\item IEEE80211_HW_REPORTS_TX_ACK_STATUS: hardware can provide ack status reports of tx frames to the stack.
+\end{itemize}
+
+Important timers:
+\begin{itemize}
+\item ieee80211_dynamic_ps_timer: Each time this timer expires, mac80211 will try to enable PS mode by calling ieee80211_dynamic_ps_enable_work tasklet.
+\end{itemize}
+
+Important functions:
+\begin{itemize}
+\item ieee80211_rx_mgmt_beacon: this function checks if the AID is set in TIM. If the card is in PS mode then it will disable PS by unsetting the IEEE80211_CONF_PS and requesting the driver to put the hardware in a low-energy mode by calling ieee80211_hw_config with IEEE80211_CONF_CHANGE_PS parameter. After that, it will send a NULL frame to the AP with the PS but unset.
+\item ieee80211_dynamic_ps_enable_work tasklet: The role of this function is to trigger the PS mode. Several checks are done before entering PS mode: check if there are no pending frames to transmit and check that the sending queues are not stopped for any reason. If all these checks are passed then enter PS mode if the NULL frame previously sent is ACK'ed. Otherwise, trigger the resending of the NULL frame with PS bit set.
+\item ieee80211_dynamic_ps_disable_work: This function unsets the IEEE80211_CONF_PS then wakes up the hardware by calling ieee80211_hw_config with IEEE80211_CONF_CHANGE_PS. Also, the pending frames from the queues that were stopped due to IEEE80211_QUEUE_STOP_REASON_PS are required to be processed.
+\item ieee80211_rx_h_data: ieee80211_dynamic_ps_timer is rearmed.
+\item ieee80211_tx_h_dynamic_ps: if the card is not in power save mode, then the ieee80211_dynamic_ps_time is re'armed. Otherwise, if the card is in PS mode, enqueue frames, unset IEEE80211_STA_NULLFUNC_ACKED, set the queue stop reason as IEEE80211_QUEUE_STOP_REASON_PS and schedule ieee80211_dynamic_ps_disable_work.
+\item ieee80211_tx_status: This function sets the IEEE80211_STA_NULLFUNC_ACKED if the NULL frame with PS bit is ACK'ed. This functionality is supported only if hardware has IEEE80211_HW_REPORTS_TX_ACK_STATUS capability.
+\item ieee80211_mgd_probe_ap: this functions is called when several beacons are missed. Once the station receives a beacon it will start the ieee80211_sta_bcn_mon_timer timer, initialized with a time equal with multiple of beacon intervals. The card might be in sleep mode but it still wakes up to receive beacons. If it wakes up several times at beacon interval but no beacon is received then the PS mode is disabled and the card stays on until it receives a beacon/declares the connection lost.
+\end{itemize}
+
+\section{ath9k_htc power save}
+\label{sec:ath9khtc}
+
+The main role of the ath9k_htc driver is to configure the Wi-Fi card hardware timers such that the card wakes up properly for beacons at TIM/DTIM period. The RTC subsystem is always on and can be programmed to wake up periodically the MAC subsystem (see \labelindexref{Figure}{img:ar9271-overview}). The RTC handles clock generation and power save signaling and is the only thing in the chip that stays on during power or full sleep states. MAC_PCU_SLP1 and MAC_PCU_SLP2 registers together  with NEXT_TIM, NEXT_DTIM and TBTT timers control when the AR9271 should wake when waiting for AP Rx traffic.
+
+MAC_PCU_SLP1 register bits:
+\begin{itemize}
+\item CAB_TIMEOUT: Time in TU that the MAC waits for CAB after receiving the beacon or the previous
+CAB, insuring that if no CAB is received after the beacon is received or if a long gap occurs between CABs, the MAC powersave state returns to idle
+\item ASSUME_DTIM: A mode bit which indicates whether to assume a beacon was missed when the
+SLP_BEACON_TIMEOUT: occurs with no received beacons, in which case is assumes
+the DTIM was missed, and waits for CAB.
+\end{itemize}
+
+MAC_PCU_SLP2 can be configured with BEACON_TIMEOUT: Time in TU that the PCU waits for a beacon after waking up. If this time expires, the MAC woke due to SLP_NEXT_DTIM, and SLP_ASSUME_DTIM is active, then it assumes the beacon was missed and goes directly to watching for CAB. Otherwise when this time expires, the beacon powersave state returns to idle.
+
+NEXT_TIM and NEXT_DTIM are configured with two values: when the timer should trigger for the first time and the period for that trigger.
+
+Using these registers, ath9k_htc defines two power level: ATH9K_PM_NETWORK_SLEEP, when the card is in low power mode and ATH9K_PM_AWAKE. The main functions defined by the driver are ath9k_htc_setpower which can set the card in one of the above states, ath9k_ps_work which sets the card to ATH9K_PM_AWAKE state for a short period of time then sets its state back to ATH9K_PM_NETWORK_SLEEP.
+
+\section{Interaction between mac80211 and ath9k_htc}
+\label{sec:ath9khtcmac80211interction}
+
+\subsection{Receive beacon with TIM unset while card is in sleep state}
+\label{sub-sec:analysis-1}
+ath9k_rx_tasklet: 
+\begin{itemize}
+\item receive a beacon, PS is enabled for the interface
+\item call mac80211 callback for processing of enqueued frames
+\end{itemize}
+ieee80211_rx_mgmt_beacon:
+\begin{itemize}
+\item receive a beacon with the TIM unset - first one
+\item notify the driver about beacon receive: card is put in the AWAKE state in order to set sleep registers and timers, TIM and DTIM timers are adjusted with info from the last beacon and wifi card is put back in sleep state
+\end{itemize}
+after beacon interval ms, hardware timers wakes up the wifi card and the process repeats
+
+\subsection{Receive beacon with TIM set while card is in sleep state}
+\label{sub-sec:analysis-2}
+ath9k_rx_tasklet: 
+\begin{itemize}
+\item receive a beacon, PS is enabled for the interface
+\item call mac80211 callback for processing of enqueued frames
+\end{itemize}
+ieee80211_rx_mgmt_beacon:
+\begin{itemize}
+\item send a notification to the driver for waking up the card
+\item send NULL frame with the PS bit unset for announcing the AP that it can send the buffered frames
+\end{itemize}
+ieee80211_tx_h_dynamic_ps:
+\begin{itemize}
+\item triggered by the sending of the SKB with the NULL function: ieee80211_dynamic_ps_timer is rearmed
+\end{itemize}
+ieee80211_rx_h_data:
+\begin{itemize}
+\item triggered by the receipt of the ACK for the NULL frame: ieee80211_dynamic_ps_timer is rearmed
+\end{itemize}
+
+\subsection{Send frame and exit from sleep state}
+\label{sub-sec:analysis-3}
+ieee80211_tx_h_dynamic_ps:
+\begin{itemize}
+\item stop queues with reason IEEE80211_QUEUE_STOP_REASON_PS
+\item unset IEEE80211_STA_NULLFUNC_ACKED
+\item schedule ieee80211_dynamic_ps_disable_work tasklet for disabling PS
+\item delay ieee80211_dynamic_ps_timer, the timer responsible for putting the card in sleep mode
+\end{itemize}
+ieee80211_dynamic_ps_disable_work:
+\begin{itemize}
+\item request driver to put the card in the awake state
+\item wake queues that are sleeping with IEEE80211_QUEUE_STOP_REASON_PS
+\end{itemize}
+after a while, the dynamic_ps_timer expires and ieee80211_dynamic_ps_enable_work is scheduled:
+\begin{itemize}
+\item check that IEEE80211_STA_NULLFUNC_ACKED is unset and send NULL frame with the PS bit set
+\item at this moement the card is still in the AWAKE state
+\end{itemize}
+ath9k_rx_tasklet->ieee80211_rx_mgmt_beacon
+ieee80211_dynamic_ps_enable_work is scheduled and the card is put into sleep state
 
 \chapter{Nexus 5 Analysis}
 
@@ -423,18 +558,60 @@ This technique proved to be useful because the graphic for the avergage power wh
 
 The AR9271 is a USB/Wifi SoC with onboad RAM, ROM, flash and the actual wireless chip.  The wireless core is an off-shoot of the AR9285, a single-chip solution. For firmware debugging, the AR9271 chip has 16 GPIO pins and some of them can be configured to work in UART mode.  Gathering data from these pins is done using a TTL UART adapter. For example, the operating system running on the SoC offers the possibility to print the value of variables.
 
-Our first approach was to solder the TX/RX wires of the TTL UART directly to the GPIO pins of the AR9271 chip from the TP-Link Dongle. Unfortuntely, the distance between two nearby pins is very small and we didn't have specialized soldering equipment. The solution was to use another dongle, a ALFA Network AWUS036NHA which uses the same AR9271 chip but has accesible UART lines on the PCB.
+Our first approach was to solder the TX/RX wires of the TTL UART directly to the GPIO pins of the AR9271 chip from the TP-Link Dongle. Unfortuntely, the distance between two nearby pins is very small and we didn't have specialized soldering equipment. The solution was to use another dongle, a ALFA Network AWUS036NHA which uses the same AR9271 chip but has accesible UART lines on the PCB. This setup is illustrated in \labelindexref{Figure}{img:ttl-uart}.
 
-\fig[scale=0.7]{src/img/ttl.jpg}{img:chananalyzer-capture}{TODO}
+\fig[scale=0.12]{src/img/ttl.jpg}{img:ttl-uart}{TTL UART connected to AWUS036NHA dongle}
 
+\section{Starting point for the algorithm}
+\label{sec:fix}
 
+PS Algorithm for multiple wireless interface is based on the ath9k_htc standard PS algorithm. The problem is that PS support for ath9k_htc driver is buggy: RX wake-up is not properly implemented. When there is no data transmitted, the WiFi card is put to sleep. The WiFi card enters the 'NETWORK SLEEP' state where the MAC subsystem is in low-power mode and no data is received from the AP that the client is associated to. The RTC subsystem is always on and can be programmed to wake up periodically the MAC subsystem (e.g.: for BEACONs with DTIM set). Using the hardware timers represented by MAC_PCU_SLP1 and MAC_PCU_SLP2 registers, the card can be programmed to wake up periodically for management frames. The problem is that the current implementation does not correctly program these hardware timers and the hardware is woken up by software timers instead or by TX operations:
+\begin{itemize}
+\item there is a mac80211 software timer that detects 7 beacon lost and wake up the card
+\item mac80211 wakes up the hardware when there is a new frame for TX.
+\end{itemize}
 
+The above bug can be easily reproduced if the Wi-Fi dongle is connected to an Access Point then power save mode is enabled without generating any traffic. According to the IEEE802.11 specification, the card should wake up for RX traffic at least at DTIM intervals. In our setup, the AP has a configured DTIM of 100ms. \labelindexref{Figure}{img:ps-single} illustrates the power pattern of the Wi-Fi dongle with the above setup. Delta time between cursors is 795 ms. This time corresponds with the timeout for mac80211 software timer reponsible for beacon loss (ieee80211_mgd_probe_ap).
 
- 
+NEXT_DTIM is the timer responsible for waking up the card at each DTIM interval. ath9k_htc driver correctly sets up this timer by setting up its two parameters: when it should arm for the first time and the period of this timer. However, it seems that the timer is triggered just a single time and the period parameter of the trigger is ignored. The solution was to rearm the timer each time a new beacon is received from the AP. \labelindexref{Figure}{img:ps-single} illustrates the power save capture after bug resolution and it can be observed that the card wakes up at each DTIM interval. This time, delta time between cursors is about 100 ms. More details can be found at \cite{cite-wikisingleps}.
 
+\fig[scale=0.45]{src/img/pssingle.png}{img:ps-single}{Power capture during Power Save bug}
+\fig[scale=0.45]{src/img/psoksingle.png}{img:ps-single}{Power capture after bug resolution}
 
+\clearpage
+\section{Double wake-up algorithm}
+\label{sec:twowakeup}
 
+ath9k_htc does not have PS support for multiple interfaces. Once the second virtual interface is created, PS is automatically disabled and the card is always in the awake state with an averge power of about 600mW.
 
+\fig[scale=0.45]{src/img/awakestate.png}{img:mps-single}{Power capture with no PS support}
+
+The power save algorithm that I implemented is split in two sections, a mac80211 section and an ath9k_htc section. At this moment the algorithm is limited to a maximum of two virtual interfaces and the the DTIM periods for the AP has to be equal.
+
+The mac80211 generic section is responsible for sending the NULL frames. Behaviour:
+\begin{itemize}
+\item when the STA received a directed TIM for one of the virtual interfaces it will send 2 NULL functions with the PS bit set, one on each interface. Most of the modifications were done in ieee80211_rx_mgmt_beacon;
+\item a single timer (ieee80211_dynamic_ps_timer) schedules the tasklet for enabling PS. Timeout for this timer expires when no data is sent on any interface.
+\item when the tasklet for enabling PS mode is scheduled (ieee80211_dynamic_ps_enable_work) it will first send 2 NULL functions with the PS bit unset, one on each interface. After both NULL frames are ACK'ed, mac80211 requests the driver to put the chip in sleep mode. 
+\end{itemize}
+
+The ath9k_htc part of the PS algorithm is responsible for waking up the card for RX traffic. This time, we have to wake up the hardware at DTIM periods which corresponds to DTIM periods for each AP that the chip is connected to. Let's assume that the dongle is connected at two APs, AP1 and AP2, each AP with the same dtim period, DTIM_PERIOD. The algorithm starts with the card in the awake state. The card will first capture one beacon from AP1 and it will save a value equal with the current time + DTIM_PERIOD. Then, the card will capture a beacon from AP2, it will arm the NEXT_DTIM timer with the saved valued and the saved value is replaces with a value equal with the current time + NEXT_DTIM. At this moment the card can enter power save mode. When it will wake up due to NEXT_DTIM timer, the NEXT_DTIM timer is re-armed wth the saved value and the saved value is replaced with the current_time + DTIM_PERIOD.
+
+For a better granularity of the timers, the current time was replaced with the value read from the LAST_TSTP register, which gives the timestamp of the last beacon received. The problem is that this register is updated with the last timestamp of the beacon received from the AP that we first established a connection with. 
+
+The algorithm behaves as expected until one random point when the card exists unexpectedly from power save. According to Wireshark captures, the algorithm still sends NULL frames correctly on both paths but the power monitor capture shows that the card enters the awake state. A discussion was started with Qualcomm developers, \cite{cite-bugps}, but no solution was found yet.
+
+\section{Single wake-up algorithm}
+\label{sec:singlewakeup}
+
+A disadvantage of the double wake-up algorithm is the fact that the card has to stay awake most of the time as the number of the interfaces increases even if there is only management traffic (beacons). This is due the fact that the hardware has to wake up to capture DTIM beacons for each AP and if there is no traffic go back to sleep again. As the number of the APs that we are connected to increases there is a high probability that the delta time between waking up for DTIM beacons for two different APs to be very short. It's true that the RTT will be very short as the client can drain quickly buffered packets but the energy saving will be minimal.
+
+The idea of the single wake-up algorithm is to use NEXT_DTIM timer only for the first AP that the client connected to, just as is done in the standard implementation then add the following modifications for multiple interface power save: 
+
+\begin{itemize}
+\item when the card wakes up due to NEXT_DTIM timer expiration, send NULL frames with the PS bit unset to all the other APs that the client is connected signaling them that sending of the buffered frames is allowed. According to the IEEE802.11 specification for Power Save, AP can send buffered frames once it received the NULL frame with PS=0 from a client;
+\item if no traffic is received from any of the APs for more than a configurable mac80211 timeout, then enter PS mode by send NULL frames with PS bit set to all the APs that the client is connected to. 
+\end{itemize}
 
 
 
