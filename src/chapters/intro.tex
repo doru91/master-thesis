@@ -59,7 +59,7 @@ Important flags:
 
 Important timers:
 \begin{itemize}
-\item ieee80211_dynamic_ps_timer: Each time this timer expires, mac80211 will try to enable PS mode by calling ieee80211_dynamic_ps_enable_work tasklet.
+\item ieee80211_dynamic_ps_timer: Each time this timer expires, mac80211 will try to enable PS mode by calling ieee80211_dynamic_ps_enable_work tasklet. This timer is armed with dynamic_ps_timeout, so if no data is received for more than dynamic_ps_timeout mac80211 layer will try to enable power save.
 \end{itemize}
 
 Important functions:
@@ -579,7 +579,7 @@ NEXT_DTIM is the timer responsible for waking up the card at each DTIM interval.
 \fig[scale=0.45]{src/img/psoksingle.png}{img:ps-single}{Power capture after bug resolution}
 
 \clearpage
-\section{Double wake-up algorithm}
+\section{Double wake-up power save algorithm}
 \label{sec:twowakeup}
 
 ath9k_htc does not have PS support for multiple interfaces. Once the second virtual interface is created, PS is automatically disabled and the card is always in the awake state with an averge power of about 600mW.
@@ -601,7 +601,7 @@ For a better granularity of the timers, the current time was replaced with the v
 
 The algorithm behaves as expected until one random point when the card exists unexpectedly from power save. According to Wireshark captures, the algorithm still sends NULL frames correctly on both paths but the power monitor capture shows that the card enters the awake state. A discussion was started with Qualcomm developers, \cite{cite-bugps}, but no solution was found yet.
 
-\section{Single wake-up algorithm}
+\section{Single wake-up power save algorithm}
 \label{sec:singlewakeup}
 
 A disadvantage of the double wake-up algorithm is the fact that the card has to stay awake most of the time as the number of the interfaces increases even if there is only management traffic (beacons). This is due the fact that the hardware has to wake up to capture DTIM beacons for each AP and if there is no traffic go back to sleep again. As the number of the APs that we are connected to increases there is a high probability that the delta time between waking up for DTIM beacons for two different APs to be very short. It's true that the RTT will be very short as the client can drain quickly buffered packets but the energy saving will be minimal.
@@ -612,6 +612,118 @@ The idea of the single wake-up algorithm is to use NEXT_DTIM timer only for the 
 \item when the card wakes up due to NEXT_DTIM timer expiration, send NULL frames with the PS bit unset to all the other APs that the client is connected signaling them that sending of the buffered frames is allowed. According to the IEEE802.11 specification for Power Save, AP can send buffered frames once it received the NULL frame with PS=0 from a client;
 \item if no traffic is received from any of the APs for more than a configurable mac80211 timeout, then enter PS mode by send NULL frames with PS bit set to all the APs that the client is connected to. 
 \end{itemize}
+
+The main disadvantage of this algorithm is an increased RTT. Also, The algorithm behaves as expected until one random point when the card exists unexpectedly from power save. In contrast to the double wake-up algorithm in this case it seems that there is a programming error because the NULL frames are not correctly sent starting with a random point.
+
+\section{Test scenarios and results}
+\label{sec:finallyresults}
+
+\subsection{No data test}
+\label{sub-sec:nodata}
+
+For this test, the client has two virtual interfaces and each one is connected to a different AP. For each DTIM value, the average power is measured when different power save algorithms are used. No data traffic is generated, only management traffic represented by beacons.
+
+In \labelindexref{Figure}{img:notraffic}, "Single Interface PS algo" represents the standard IEEE802.11 algorithm implementation from the ath9k_htc driver, while the 'No PS algorithm' measures the average power when power save is disabled.
+
+As the DTIM values increases, the average power decreases because the card has to wake up more rare to capture DTIM beacons. Both single wake-up and double wake-up power save algorithms cuts down the average power to more than half. The average power for single wake-up power save algorithm is smaller than the one for double wake-up algorithm because the card has to wake more rare. When the NULL frame is sent towards the second AP to announce it that the client is awake no data is found is buffered and the client goes to sleep. 
+
+The average power for single wake-up algorithm is greater than the one for single interface PS algorithm because the the card has to do two additional operations: send a NULL frame towards the second AP to announce it that is has woken up, then wait a timeout for data traffic before going to sleep.     
+
+\begin{figure}
+\includegraphics{src/img/notraffic.eps}
+\captionof{figure}{Comparison between Power Save Algorithms}
+\label{img:notraffic}
+\end{figure}
+
+\subsection{Traffic test}
+\label{sub-sec:traffic}
+
+This test shows the averge power correlated with throughput. Traffic was generated using iperf UDP traffic, from the APs towards the client. The single wake-up power save algorithm was not used as it became pretty unstable once we started to generate traffic.
+
+For the double wake-up PS algo, the client connected at two APs but traffic was generated from a single one: iperf throughout was gradually increased then we took the average power reported by the power monitor device.
+
+As can be observed in \labelindexref{Figure}{img:exp2}, for traffic under 5Mbits/s, the double wake-up power save algorithm drops the average power by more than 100mW. Most of the times, the average power for double wake-up PS is greater than the one for single interface PS but there are also some exceptions (e.g.: for 15Mbits/s throughput). One possible explanation is that the NEXT_DTIM timer fails to wake-up the card properly in some cases, beacons with TIM set are lost and the card stays asleep more than it should.
+
+\begin{figure}
+\includegraphics{src/img/exp2.eps}
+\captionof{figure}{Average Power correlated with Throughput}
+\label{img:exp2}
+\end{figure}
+
+\subsection{RTT tests}
+\label{sub-sec:rtt}
+For this set of tests, ping packets generated at intervals of 1s, 100ms and 10ms were sent from the AP to the client, then we took the RTT value and plotted the CDF. For the double wake-up PS algo, the client connected at two APs but traffic was generated from a single one. The DTIM value was set at 200ms for both APs.
+
+
+\begin{figure}[bp!]
+\includegraphics{src/img/cdfsingle.eps}
+\captionof{figure}{Single Interface PS algo CDF for different ping intervals}
+\label{img:cdfsingle}
+\end{figure}
+
+\labelindexref{Figure}{img:cdfsingle} shows the RTT CDF for ping packets generated at different intervals, in case of the single interface power save algorithm. The main issue here is that the lower limit for RTT is about DTIM/2 even for packets generated at 10ms. The upper limit for RTT is about DTIM * 1.5. This value is explained by the next behaviour: the AP generates a ping request packet but this packet can't be sent into the air because the client is asleep. So the AP has to wait a few milliseconds until the next beacon is generated and the TIM is set. The client does not see the first beacon but the second one (DTIM == 200). So the RTT==DTIM+delay waiting for the first beacon after ping request to be generated.
+
+Regarding the lower limit for the RTT, we would have expected to be very low, a few milliseconds: once the client wakes up we should be able to send directly a ping request. This lower limit for RTT is kept even when we generate pings at 1ms interval. One work-around was to increase the dynamic_ps_timeout from 10ms to 15ms then the packets generated at intervals of 10ms will have a very low RTT.
+
+\labelindexref{Figure}{img:cdfdouble} shows the RTT CDF for ping packets generated at different intervals, in case of the double wake-up power save algorithm. The CDF shows that as the ping interval is increased the RTT for ping packets decreases because the client stays awake more time.
+
+\begin{figure}
+\includegraphics{src/img/cdfdouble.eps}
+\captionof{figure}{Double wake-up PS algo CDF for different ping intervals}
+\label{img:cdfdouble}
+\end{figure}
+
+\chapter{Conclusions}
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+Through this project I managed to achieve the goal of lowering the energy consumption for a mobile device by analyzing the existing solutions then implementing my own power save algorithm.
+
+I reverse engineered the existing multiple wireless algorithm for the Nexus 5 smartphone, with a focus on throughput performance and power save optimizations. 
+
+I overcome the firmware limitation of creating a single wireless interface in managed mode and I came up with the solution of using a Wi-Fi Dongle whose firmware and datasheet are both open-source and offers the possibility to create multiple wireless interfaces in managed mode.
+
+I found the solution of measuring the energy consumption of the Wi-Fi dongle only by using the USB auxiliary port of the Monsoon Power Monitor Device. This allowed me to make accurate power save measurements.
+
+I designed, implemented and tested my own algorithm for power save which can drop the average power by more than 50 percent.
+
+\section{Lessons learned}
+\label{sec:lessons}
+
+The algorithm which allows the parallel usage of Regular Wi-Fi and Wi-Fi Direct paths on Nexus 5 is rudimentary: the channel switching quantum is fixed without any optimization for the level of traffic on a specific path. Also, there is no power save scheme once a second virtual interface is created and the card enters a high-consumption state without any sleep cycles.
+
+The existing firmware for the Wi-Fi card of smartphones is closed-source and no low-level features can be added. In our case, we could not add a second virtual interface in managed mode and this was a show-stopper for implementing our own power-save algorithm directly on top of the internal Wi-Fi card.
+
+It proved that the Wi-Fi dongle TP-Link WN722N is totally open-source and the power save algorithm that I designed using this dongle managed to drop the average power by more than 50 percent.
+
+\section{Further work}
+\label{sec:furtherwork}
+
+As further work, the implementation of my power save algorithm directly on the internal Wi-Fi card of a smartphone should be done. A smartphone with a mac80211 Wi-Fi driver should be choosen: from a quick search it seems that wcn36xx, \cite{cite-wcn}, is the single mac80211-compatible driver for a smartphone (Nexus 4). Also, access to the firmware of the internal Atheros WCN3660 chip is needed. A discussion was already started at \cite{cite-wcndiscussion}.
+
+For the double wake-up power save algorithm, the card exits power save mode starting with a random point so a further investigation is needed. From preliminary discussions, it seems that there is a hardware bug (\cite{cite-bugps}). Also, the granularity of the NEXT_DTIM timer could be improved if the LAST_TSTP hardware register would be updated with the timestamp of the last received beacon even in the cases when we are connected to multiple APs. Now, it is updated with the timestamp of the last beacon received from the first AP that the client connected to.
+
+Regarding the single wake-up power save algorithm, it seems that the bug is not a hardware problem but more an implementation bug so an implementation effort should be invested here.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
