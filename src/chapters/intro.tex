@@ -50,7 +50,7 @@ This chapter describes the main functions used by the mac80211 layer for impleme
 
 Important flags:
 \begin{itemize}
-\item IEEE80211_CONF_PS: Enable 802.11 power save mode (managed mode only). This is the standard power save mode, meaning that the hardware still wakes up for beacons, is able to transmit frames and receive the possible acknowledgment frames. Not to be confused with hardware specific wakeup/sleep states.
+\item IEEE80211_CONF_PS: If set, then 802.11 power save mode should be enabled. This is the standard power save mode, meaning that the hardware still wakes up for beacons, is able to transmit frames and receive the possible acknowledgment frames. Not to be confused with hardware specific wakeup/sleep states.
 \item IEEE80211_CONF_CHANGE_PS: signals that the PS flag or the dynamic PS timeout changed. This flag is checked if IEEE80211_CONF_PS is set.
 \item IEEE_80211_HW_SUPPORTS_PS: hardware support for power save.
 \item IEEE80211_STA_NULLFUNC_ACKED: set when the NULL frame with PS bit set is ACK'ed.
@@ -62,9 +62,10 @@ Important timers:
 \item ieee80211_dynamic_ps_timer: Each time this timer expires, mac80211 will try to enable PS mode by calling ieee80211_dynamic_ps_enable_work tasklet. This timer is armed with dynamic_ps_timeout, so if no data is received for more than dynamic_ps_timeout mac80211 layer will try to enable power save.
 \end{itemize}
 
+\newpage
 Important functions:
 \begin{itemize}
-\item ieee80211_rx_mgmt_beacon: this function checks if the AID is set in TIM. If the card is in PS mode then it will disable PS by unsetting the IEEE80211_CONF_PS and requesting the driver to put the hardware in a low-energy mode by calling ieee80211_hw_config with IEEE80211_CONF_CHANGE_PS parameter. After that, it will send a NULL frame to the AP with the PS but unset.
+\item ieee80211_rx_mgmt_beacon: this function checks if the AID is set in TIM. If the card is in PS mode then it will disable PS by unsetting the IEEE80211_CONF_PS and requesting the driver to put the hardware in the awake mode by calling ieee80211_hw_config with IEEE80211_CONF_CHANGE_PS parameter. After that, it will send a NULL frame to the AP with the PS bit unset.
 \item ieee80211_dynamic_ps_enable_work tasklet: The role of this function is to trigger the PS mode. Several checks are done before entering PS mode: check if there are no pending frames to transmit and check that the sending queues are not stopped for any reason. If all these checks are passed then enter PS mode if the NULL frame previously sent is ACK'ed. Otherwise, trigger the resending of the NULL frame with PS bit set.
 \item ieee80211_dynamic_ps_disable_work: This function unsets the IEEE80211_CONF_PS then wakes up the hardware by calling ieee80211_hw_config with IEEE80211_CONF_CHANGE_PS. Also, the pending frames from the queues that were stopped due to IEEE80211_QUEUE_STOP_REASON_PS are required to be processed.
 \item ieee80211_rx_h_data: ieee80211_dynamic_ps_timer is rearmed.
@@ -89,12 +90,14 @@ the DTIM was missed, and waits for CAB.
 
 MAC_PCU_SLP2 can be configured with BEACON_TIMEOUT: Time in TU that the PCU waits for a beacon after waking up. If this time expires, the MAC woke due to SLP_NEXT_DTIM, and SLP_ASSUME_DTIM is active, then it assumes the beacon was missed and goes directly to watching for CAB. Otherwise when this time expires, the beacon powersave state returns to idle.
 
-NEXT_TIM and NEXT_DTIM are configured with two values: when the timer should trigger for the first time and the period for that trigger.
+NEXT_TIM and NEXT_DTIM are configured with two values: when the timer should trigger for the first time and the period at which the timer should be triggered.
 
 Using these registers, ath9k_htc defines two power level: ATH9K_PM_NETWORK_SLEEP, when the card is in low power mode and ATH9K_PM_AWAKE. The main functions defined by the driver are ath9k_htc_setpower which can set the card in one of the above states, ath9k_ps_work which sets the card to ATH9K_PM_AWAKE state for a short period of time then sets its state back to ATH9K_PM_NETWORK_SLEEP.
 
 \section{Interaction between mac80211 and ath9k_htc}
 \label{sec:ath9khtcmac80211interction}
+
+In the following paragraph, a beacon with TIM unset means that the client received a beacon whose TIM does not have set the AID of the client set.
 
 \subsection{Receive beacon with TIM unset while card is in sleep state}
 \label{sub-sec:analysis-1}
@@ -106,9 +109,9 @@ ath9k_rx_tasklet:
 ieee80211_rx_mgmt_beacon:
 \begin{itemize}
 \item receive a beacon with the TIM unset - first one
-\item notify the driver about beacon receive: card is put in the AWAKE state in order to set sleep registers and timers, TIM and DTIM timers are adjusted with info from the last beacon and wifi card is put back in sleep state
+\item notify the driver about beacon receive: card is put in the awake state in order to set sleep registers and timers, TIM and DTIM timers are adjusted with info from the last beacon and the Wi-Fi card is put back in sleep state
 \end{itemize}
-after beacon interval ms, hardware timers wakes up the wifi card and the process repeats
+after beacon interval ms, hardware timers wakes up the Wi-Fivcard for RX management traffic and the process repeats
 
 \subsection{Receive beacon with TIM set while card is in sleep state}
 \label{sub-sec:analysis-2}
@@ -120,6 +123,7 @@ ath9k_rx_tasklet:
 ieee80211_rx_mgmt_beacon:
 \begin{itemize}
 \item send a notification to the driver for waking up the card
+\item ath9k_htc puts the card in the awake state
 \item send NULL frame with the PS bit unset for announcing the AP that it can send the buffered frames
 \end{itemize}
 ieee80211_tx_h_dynamic_ps:
@@ -143,12 +147,12 @@ ieee80211_tx_h_dynamic_ps:
 ieee80211_dynamic_ps_disable_work:
 \begin{itemize}
 \item request driver to put the card in the awake state
-\item wake queues that are sleeping with IEEE80211_QUEUE_STOP_REASON_PS
+\item wake queues that are sleeping with IEEE80211_QUEUE_STOP_REASON_PS: frame is sent into the air
 \end{itemize}
 after a while, the dynamic_ps_timer expires and ieee80211_dynamic_ps_enable_work is scheduled:
 \begin{itemize}
 \item check that IEEE80211_STA_NULLFUNC_ACKED is unset and send NULL frame with the PS bit set
-\item at this moement the card is still in the AWAKE state
+\item at this moment the card is still in the awake state
 \end{itemize}
 ath9k_rx_tasklet->ieee80211_rx_mgmt_beacon
 ieee80211_dynamic_ps_enable_work is scheduled and the card is put into sleep state
@@ -157,17 +161,16 @@ ieee80211_dynamic_ps_enable_work is scheduled and the card is put into sleep sta
 
 One of the first Android phones used for studying the Multiple Wireless Connectivity was the Google Nexus 5 \cite{cite-nexus5}. The main reason for this choice is the availability of both 2.4 Ghz and 5Ghz Wi-Fi frequencies which opens the door for the analysis of channel switching use-cases. 
 
-The analysis is focused on the parallel usage of both the regular Wi-Fi 802.11 connectivity and Wi-Fi Direct connectivity. The main discovery is that the Power Save algorithm is automatically disabled once a second virtual interface is created, in this particular case the interface for the Wi-Fi Direct connection. 
+The analysis is focused on the parallel usage of both the regular Wi-Fi 802.11 connectivity and Wi-Fi Direct connectivity. The main discovery is that the power save algorithm is automatically disabled once a second virtual interface is created, in this particular case the interface for the Wi-Fi Direct connection. 
 
-What I tried to do was to replace this second interface with an interface for a secondary Wi-Fi 802.11 connection then implement my own Power-Save algorithm but this proved to be a show-stopper because the firmware for Nexus 5 is closed-source and it was impossible to make the stack work in parallel with two virtual interfaces in managed mode.
-
+What I tried to do was to replace the Wi-Fi Direct interface with an interface for a secondary Wi-Fi 802.11 connection then implement my own power-save algorithm but this proved to be a show-stopper because the firmware for Nexus 5 is closed-source and it was impossible to make the stack work in parallel with two virtual interfaces in managed mode.
 
 \section{Testbed}
 \label{sec:testbed}
 
 Some modifications had to be done to the Wi-Fi Direct functionality so CyanogenMod 13 Hammerhead was chosen as operating system as the community was very active when the work for this project was started (2014). In the meantime, the original project died and was rebranded in Lineage OS \cite{cite-lineage}.
 
-As hardware I used an AC750 Wireless Dual Band Gigabit Router \cite{cite-router}, a Monsoon Power Monitor device \cite{cite-monsoon}, a WiFi Spectrum analyzer and two Nexus 5 smartphones. One of the phones acts as P2P-GO and the other one as P2P client. In some tests, the P2P client is also connected to the Access Point. Also, in some tests, the Power Monitor Device measures the power consumption of the P2P client.
+As hardware I used an AC750 Wireless Dual Band Gigabit Router \cite{cite-router}, a Monsoon Power Monitor device \cite{cite-monsoon}, a Wi-Fi Spectrum analyzer and two Nexus 5 smartphones. One of the phones acts as P2P-GO and the other one as P2P client. In some tests, the P2P client is also connected to the Access Point. Also, in some tests, the Power Monitor Device measures the power consumption of the P2P client.
 
 \subsection{Capturing Air Packets}
 \label{sub-sec:proj-scopemonitormode}
@@ -178,7 +181,7 @@ However, the Wi-Fi Spectrum analyzer (see \labelindexref{Figure}{img:chananalyze
 
 \fig[scale=0.5]{src/img/chananalyzer.jpg}{img:chananalyzer-capture}{Spectrum analyzer capture}
 
-After starting a discussion \cite{cite-monitordiscussion} with the Intel Wi-Fi driver maintainer (iwlwifi), it proved that the problem was caused by the lack of low-density parity-check (LDPC) coding capability in hardware. Our card, Intel 7260 supports only Viterbi decoding. The next step was trying to install an Intel 7265 card which does support LDPC. The problem was that our laptop uses the older mini-PCIe connection while we needed an M.2 connection for the 7265 card.
+After starting a discussion \cite{cite-monitordiscussion} with the Intel Wi-Fi driver (iwlwifi) maintainer, it proved that the problem was caused by the lack of low-density parity-check (LDPC) coding capability in hardware. Our card, Intel 7260 supports only Viterbi decoding. The next step was trying to install an Intel 7265 card which does support LDPC. The problem was that our laptop uses the older mini-PCIe connection while we needed an M.2 connection for the 7265 card.
 
 Unable to install a newer card we tested an external card, a TP-Link TL-WN722N card \cite{cite-tplink} which proved to have LDPC capabilities. The problem with this card is the limitation to capture only 802.11n packets on the 2.4 frequency.
 
@@ -257,14 +260,14 @@ Looking in the existing code, we noticed that the sta_p2p_iface_combinations str
 \section{Channel Switching Tests}
 \label{sec:nexus5-chsw}
 
-For the first set of experiments we set the AP on the 5 Ghz frequency then we connected the first Nexus 5 acting as P2P GO to the AP using regular Wi-Fi. A Wi-Fi Direct connection is established between the Nexus 5 phones.
+For the first set of experiments we set the AP on the 5 Ghz frequency then we connected the first Nexus 5 acting as P2P-client to the AP using regular Wi-Fi. A Wi-Fi Direct connection is established between the Nexus 5 phones.
  
 \fig[scale=0.7]{src/img/topologyj.jpeg}{img:topologynexus5-setup}{Topology}
 
 \subsection{Channel-Switching Quantum}
 \label{sub-sec:chsw-time}
 
-In order to determine the switching time quantum, ping packets were generated simultaneously on both paths, from 192.168.49.1 towards 192.168.49.184, and from 192.168.0.101 towards 192.168.49.
+In order to determine the switching time quantum, ping packets were generated simultaneously on both paths, from 192.168.49.1 towards 192.168.49.185, and from 192.168.0.101 towards 192.168.0.100.
 
 After analysing the RTT for both paths, a channel switching quantum of 60ms can be deduced. This quantum seems to be hard-coded as we tested with different ping intervals but the RTT distribution is the same (see Figure \ref{img:regular-wifi}, Figure \ref{img:wifi-direct}). Worse, even if we don't generate any traffic on one path (Regular Wi-Fi/Wi-Fi Direct), the switching time quantum is the same. This demonstrates that the channel-switching alghoritm runs with the same parameters in all situations and no algorithm for adjusting the channel switching quantum according to the traffic distribution is taken into consideration.
 
@@ -292,7 +295,7 @@ When the channel switching algorithm does not run, the average RTT value is very
 \subsection{Channel-Switching Overhead}
 \label{sub-sec:chsw-overhead}
 
-The Channel Switch Overhead is the percent of time needed by the hardware to switch between two frequencies and no data can be transmitted or received during this switch. The idea of this test is to determine the maximum capacity of both paths by generating UDP packets with iperf in a single wifi scenario and getting the throughput value reported by iperf. Then, send UDP packets on both paths in a multiple wireless connectivity scenario with iperf and again get the throughput value. In an ideal case, if there is no channel switch overhead, the ratio between the throughput in a single wifi scenario and the throughput in a multi wifi scenario should be 2 for each channel.
+The Channel Switch Overhead is the percent of time needed by the hardware to switch between two frequencies and no data can be transmitted or received during this switch. The idea of this test is to determine the maximum capacity of both paths by generating UDP packets with iperf in a single wifi scenario and getting the throughput value reported by iperf. Then, send UDP packets on both paths in a multiple wireless connectivity scenario with iperf and again get the throughput value. In an ideal case, if there is no channel switch overhead, the ratio between the throughput in a single wifi scenario and the throughput in a multi wifi scenario should be 2 on each channel.
 
 For the Regular Wi-Fi path, the channel capacity is  about 230 Mbits/s. This value was obtained by generating UDP traffic from 192.168.0.101 towards 192.168.0.100. For the Wi-Fi Direct Path the channel capacity is about 55Mbits/s. This value was obtained by generated UDP traffic from the P2P-GO towards the P2P-Client.
 
@@ -325,14 +328,13 @@ For the next experiments we wanted to measure the energy consumption for differe
 \newpage
 \subsection{Phone connected only to the AP}
 \label{sub-sec:ap-only}
-The average power for 120s when the phone is connected just to the AP but no data is transferred is 60.57mW. This value should be lower but it seems that some IPV6 Router Advertisements messages introduce some spikes in the power consumption graph from \labelindexref{Figure}{img:ap-only}. The blue line represents the average power, the red line represents the
-minimum power and the green one represents the maximum power.
+The average power for 120s when the phone is connected just to the AP but no data is transferred is 60.57mW. This value should be lower but it seems that some IPV6 Router Advertisements messages introduce some spikes in the power consumption graph from \labelindexref{Figure}{img:ap-only}.
 
 \fig[scale=0.5]{src/img/aponly.png}{img:ap-only}{Power when the phone is connected just to the AP}
 
 \subsection{Phone connected in parallel to the AP and to the P2P GO}
 \label{sub-sec:app2p-parallel}
-In this case the average power consumption for 120s is 441.36mW. This value is correct as I repeated the experiments and the results are consistent.
+In this case the average power consumption for 120s is 441.36mW (see \labelindexref{Figure}{img:ap-p2p}). There are two energy levels: one corresponding to the Wi-Fi Direct connection and one corresponding to the Regular Wi-Fi connection. The average power for the Regular Wi-Fi connection is higher because we are using 802.11ac which does channel bonding \cite{cite-bonding} versus Wi-Fi Direct which uses 802.11n with a single channel.
 
 \fig[scale=0.8]{src/img/app2pbis.png}{img:ap-p2p}{Power when the phone is connected in parallel to AP and to the P2P-GO}
 
@@ -517,7 +519,7 @@ Currently, there is no smartphone whose firmware is open-source for the Wi-Fi ca
 \section{Using the Wi-Fi dongle with Nexus 5}
 \label{sec:donglesmartphone}
 
-The micro-USB port of the smartphone was used for connecting the Wi-Fi dongle, as can be observed in \labelindexref{Figure}{img:dongle-wifi}. The driver used by the dongle is ath9k_htc so we had to enable loadable module support plus ath9k_htc in the kernel menuconfig. However there was an 'Exec format' error while trying to insert the ath9k_htc.ko module using the insmod shell command. The insmod command calls in the bacground the init_module system call:
+The micro-USB port of the smartphone was used for connecting the Wi-Fi dongle, as can be observed in \labelindexref{Figure}{img:dongle-wifi}. The driver used by the dongle is ath9k_htc so we had to enable loadable module support plus ath9k_htc in the kernel menuconfig. However there was an 'Exec format' error while trying to insert the ath9k_htc.ko module using the insmod shell command. The insmod command calls in the background the init_module system call:
 
 \begin{lstlisting}[language=C, frame=single, caption={init_module system call},label=InterfaceCombinations]
 int init_module(void *module_image, unsigned long len, const char *param_values);
@@ -609,8 +611,8 @@ A disadvantage of the double wake-up algorithm is the fact that the card has to 
 The idea of the single wake-up algorithm is to use NEXT_DTIM timer only for the first AP that the client connected to, just as is done in the standard implementation then add the following modifications for multiple interface power save: 
 
 \begin{itemize}
-\item when the card wakes up due to NEXT_DTIM timer expiration, send NULL frames with the PS bit unset to all the other APs that the client is connected signaling them that sending of the buffered frames is allowed. According to the IEEE802.11 specification for Power Save, AP can send buffered frames once it received the NULL frame with PS=0 from a client;
-\item if no traffic is received from any of the APs for more than a configurable mac80211 timeout, then enter PS mode by send NULL frames with PS bit set to all the APs that the client is connected to. 
+\item when the card wakes up due to NEXT_DTIM timer expiration, send NULL frames with the PS bit unset to all the other APs that the client is connected to signaling them that sending of the buffered frames is allowed. According to the IEEE802.11 specification for Power Save, APs can send buffered frames once it received the NULL frame with PS=0 from a client;
+\item if no traffic is received from any of the APs for more than a configurable mac80211 timeout, then enter PS mode by sending NULL frames with PS bit set to all the APs that the client is connected to. 
 \end{itemize}
 
 The main disadvantage of this algorithm is an increased RTT. Also, The algorithm behaves as expected until one random point when the card exists unexpectedly from power save. In contrast to the double wake-up algorithm in this case it seems that there is a programming error because the NULL frames are not correctly sent starting with a random point.
@@ -704,7 +706,11 @@ As further work, the implementation of my power save algorithm directly on the i
 
 For the double wake-up power save algorithm, the card exits power save mode starting with a random point so a further investigation is needed. From preliminary discussions, it seems that there is a hardware bug (\cite{cite-bugps}). Also, the granularity of the NEXT_DTIM timer could be improved if the LAST_TSTP hardware register would be updated with the timestamp of the last received beacon even in the cases when we are connected to multiple APs. Now, it is updated with the timestamp of the last beacon received from the first AP that the client connected to.
 
-Regarding the single wake-up power save algorithm, it seems that the bug is not a hardware problem but more an implementation bug so an implementation effort should be invested here.
+The above bug also can be reproduced on the single wake-up power save algorithm. However, in this case it looks more like an implementation problem than a hardware one so an implementation effort is needed.
+
+The power save algorithm could be tested together with the Multi-WiFi technology (\cite{cite-mwifi}) and analyze how it interacts with the MPTCP congestion control algorithm.
+
+
 
 
 
